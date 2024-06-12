@@ -1,104 +1,107 @@
 <template>
   <div class="app-container">
-    <!-- <breadcrumb class="breadcrumb-container" /> -->
-    <el-form :model="queryParams" label-position="left" ref="queryForm" v-show="showSearch" @submit.prevent>
-      <el-row :gutter="30">
-        <el-col :span="16">
-          <el-form-item label="" prop="fileId">
-            <el-input v-model="queryParams.fileId" placeholder="请输入文件id" clearable />
-          </el-form-item>
-          <div v-if="updateSearch">
-            <el-form-item label="" style="width: 500px;">
-              <el-date-picker v-model="dateRangeAddTime" type="daterange" range-separator="-" start-placeholder="开始日期"
-                end-placeholder="结束日期" placeholder="请选择上传时间"></el-date-picker>
-            </el-form-item>
-            <el-form-item label="" prop="storeType">
-              <el-radio-group v-model="queryParams.storeType" @change="handleQuery" placeholder="请选择存储类型">
-                <el-radio-button value=""> 全部 </el-radio-button>
-                <el-radio-button v-for="item in storeTypeOptions" :key="item.dictValue" :value="item.dictValue">
-                  {{ item.dictLabel }}
-                </el-radio-button>
-              </el-radio-group>
-            </el-form-item>
-          </div>
-        </el-col>
-        <el-col :span="8" style="text-align: right;">
-          <el-form-item>
-            <el-button type="primary" icon="search" @click="handleQuery">{{ $t('btn.search') }}</el-button>
-            <el-button icon="refresh" @click="resetQuery">{{ $t('btn.reset') }}</el-button>
-            <el-button icon="refresh" @click="updateSearch = !updateSearch">高级搜索</el-button>
-          </el-form-item>
-        </el-col>
-      </el-row>
-    </el-form>
-    <!-- 工具区域 -->
-    <el-row :gutter="10" class="mb8">
-      <el-col :span="1.5">
-        <el-button type="primary" plain icon="upload" @click="handleAdd">
-          {{ $t('btn.upload') }}
-        </el-button>
-      </el-col>
-      <el-col :span="1.5">
-        <el-button type="danger" :disabled="multiple" plain icon="delete" @click="handleDelete">
-          {{ $t('btn.delete') }}
-        </el-button>
-      </el-col>
-      <right-toolbar :showSearch="showSearch" @queryTable="getAllList"> </right-toolbar>
-    </el-row>
+    <el-tabs type="border-card">
+      <el-tab-pane label="我的传阅">
+        <el-form :model="queryParams" label-position="left" ref="queryForm" v-show="showSearch" @submit.prevent>
+          <el-row :gutter="30">
+            <el-col :span="16">
+              <el-form-item label="" prop="fileId">
+                <el-input v-model="queryParams.fileId" placeholder="请输入文件id" clearable />
+              </el-form-item>
+              <div v-if="updateSearch">
+                <el-form-item label="" style="width: 500px;">
+                  <el-date-picker v-model="dateRangeAddTime" type="daterange" range-separator="-"
+                    start-placeholder="开始日期" end-placeholder="结束日期" placeholder="请选择上传时间"></el-date-picker>
+                </el-form-item>
+                <el-form-item label="" prop="storeType">
+                  <el-radio-group v-model="queryParams.storeType" @change="handleQuery" placeholder="请选择存储类型">
+                    <el-radio-button value=""> 全部 </el-radio-button>
+                    <el-radio-button v-for="item in storeTypeOptions" :key="item.dictValue" :value="item.dictValue">
+                      {{ item.dictLabel }}
+                    </el-radio-button>
+                  </el-radio-group>
+                </el-form-item>
+              </div>
+            </el-col>
+            <el-col :span="8" style="text-align: right;">
+              <el-form-item>
+                <el-button type="primary" icon="search" @click="handleQuery">{{ $t('btn.search') }}</el-button>
+                <el-button icon="refresh" @click="resetQuery">{{ $t('btn.reset') }}</el-button>
+                <el-button icon="refresh" @click="updateSearch = !updateSearch">高级搜索</el-button>
+              </el-form-item>
+            </el-col>
+          </el-row>
+        </el-form>
+        <!-- 工具区域 -->
+        <el-row :gutter="10" class="mb8">
+          <el-col :span="1.5">
+            <el-button type="primary" plain icon="upload" @click="handleAdd">
+              {{ $t('btn.upload') }}
+            </el-button>
+          </el-col>
+          <el-col :span="1.5">
+            <el-button type="danger" :disabled="multiple" plain icon="delete" @click="handleDelete">
+              {{ $t('btn.delete') }}
+            </el-button>
+          </el-col>
+          <right-toolbar :showSearch="showSearch" @queryTable="getAllList"> </right-toolbar>
+        </el-row>
 
-    <!-- 数据区域 -->
-    <el-table :data="dataList" v-loading="loading" ref="table" border highlight-current-row
-      @selection-change="handleSelectionChange">
-      <el-table-column type="selection" width="50" align="center" />
-      <!-- <el-table-column prop="id" label="文件id" width="150" :show-overflow-tooltip="true" /> -->
-      <el-table-column prop="name" label="文件名" align="left" :show-overflow-tooltip="true">
-        <template #default="scope">
-          <el-icon v-if="!scope.row.extension" :size="26">
-            <Folder color="#ff9800" />
-          </el-icon>
-          <el-icon v-else size="26">
-            <Picture color="#67C23A" />
-          </el-icon>
-          <a href="javascript:" @click="handleView(scope.row)">{{ scope.row.name }}</a>
-          <!-- <el-link type="primary" :href="scope.row.accessUrl" target="_blank">{{ scope.row.name }}</el-link> -->
-        </template>
-      </el-table-column>
-      <el-table-column prop="size" label="文件大小" align="center" :show-overflow-tooltip="true" width="100px" />
-      <el-table-column prop="extension" label="扩展名" align="center" :show-overflow-tooltip="true" width="80px" />
-      <!-- <el-table-column prop="storeType" label="存储类型" align="center">
-        <template #default="scope">
-          <dict-tag :options="storeTypeOptions" :value="parseInt(scope.row.storeType)" />
-        </template>
-      </el-table-column> -->
-      <!-- <el-table-column prop="storePath" label="存储目录"></el-table-column> -->
-      <el-table-column prop="create_by" label="操作人" align="center" width="80px" />
-      <el-table-column prop="modifiedDate" label="操作时间" align="center" width="120">
-        <template #default="{ row }">
-          {{ showTime(row.modifiedDate) }}
-        </template>
-      </el-table-column>
-      <el-table-column label="操作" align="center" width="160">
-        <template #default="scope">
-          <el-button text size="small" icon="view" title="查看" @click="handleView(scope.row)"></el-button>
+        <!-- 数据区域 -->
+        <el-table :data="dataList" v-loading="loading" ref="table" border highlight-current-row
+          @selection-change="handleSelectionChange">
+          <el-table-column type="selection" width="50" align="center" />
+          <!-- <el-table-column prop="id" label="文件id" width="150" :show-overflow-tooltip="true" /> -->
+          <el-table-column prop="name" label="文件名" align="left" :show-overflow-tooltip="true">
+            <template #default="scope">
+              <el-icon v-if="!scope.row.extension" :size="26">
+                <Folder color="#ff9800" />
+              </el-icon>
+              <el-icon v-else size="26">
+                <Picture color="#67C23A" />
+              </el-icon>
+              <a href="javascript:" @click="handleView(scope.row)">{{ scope.row.name }}</a>
+              <!-- <el-link type="primary" :href="scope.row.accessUrl" target="_blank">{{ scope.row.name }}</el-link> -->
+            </template>
+          </el-table-column>
+          <el-table-column prop="size" label="文件大小" align="center" :show-overflow-tooltip="true" width="100px" />
+          <el-table-column prop="extension" label="扩展名" align="center" :show-overflow-tooltip="true" width="80px" />
 
-          <el-button text size="small" icon="download" title="下载" v-hasPermi="['tool:file:download']"
-            v-if="scope.row.storeType == 1" @click="handleDown(scope.row)"></el-button>
-          <el-button class="copy-btn-main" icon="document-copy" title="复制" text size="small"
-            @click="copyText(scope.row.accessUrl)"> </el-button>
-          <el-button v-hasPermi="['tool:file:delete']" title="删除" text size="small" icon="delete"
-            @click="handleDelete(scope.row)"> </el-button>
-        </template>
-      </el-table-column>
-    </el-table>
-    <pagination background :total="total" v-model:page="queryParams.pageNum" v-model:limit="queryParams.pageSize"
-      @pagination="getAllList" />
+          <el-table-column prop="create_by" label="操作人" align="center" width="80px" />
+          <el-table-column prop="modifiedDate" label="操作时间" align="center" width="120">
+            <template #default="{ row }">
+              {{ showTime(row.modifiedDate) }}
+            </template>
+          </el-table-column>
+          <el-table-column label="操作" align="center" width="180">
+            <template #default="scope">
+              <el-button-group size="small">
+                <el-button type="primary" @click="handleView(scope.row)">
+                  查看
+                </el-button>
+                <el-button type="success" @click="handelTransform(scope.row)">
+                  传阅
+                </el-button>
+                <el-button type="warning" @click="handleDelete(scope.row)">
+                  删除
+                </el-button>
+              </el-button-group>
+
+            </template>
+          </el-table-column>
+        </el-table>
+        <pagination background :total="total" v-model:page="queryParams.pageNum" v-model:limit="queryParams.pageSize"
+          @pagination="getAllList" />
+      </el-tab-pane>
+      <el-tab-pane label="传阅管理">传阅管理</el-tab-pane>
+    </el-tabs>
 
     <el-dialog :title="title" :lock-scroll="false" v-model="open" width="500px" draggable>
       <el-form ref="formRef" :model="form" :rules="rules" label-width="100px" label-position="left">
         <el-row>
           <el-col :lg="24">
-            <DocumentUpload ref="uploadRef" v-model="form.accessUrl" :fileType="[]" :fileSize="100" :drag="true"
-              :data="uploadData" :autoUpload="false" @success="handleUploadSuccess" />
+            <DocumentUpload ref="uploadRef" @call-back="handleClosed" v-model="form.accessUrl" :fileType="[]"
+              :fileSize="100" :drag="true" :data="uploadData" :autoUpload="false" @success="handleUploadSuccess" />
           </el-col>
         </el-row>
       </el-form>
@@ -111,35 +114,48 @@
     </el-dialog>
 
     <el-dialog :lock-scroll="false" v-model="openFileView" title="文件预览" :width="850">
-      <iframe :src="src" frameborder="no" style="width: 100%;height: 100%" scrolling="auto" />
+      <iframe :src="viewUrl" frameborder="no" style="width: 100%;height: 600px" scrolling="auto" />
+      <template #footer>
+        <div class="dialog-footer">
+          <el-button @click="openFileView = false">取消</el-button>
+          <el-button type="primary" @click="openFileView = false">
+            确定
+          </el-button>
+        </div>
+      </template>
+    </el-dialog>
+
+    <el-dialog :lock-scroll="false" v-model="openFolderView" :title="optionType == 'copy' ? '文件复制' : '文件移动'"
+      :width="650">
+      <el-form-item :label="optionType == 'copy' ? '复制到' : '移动到'">
+        <el-select v-model="selectFolder" placeholder="Select" size="large" style="width: 240px">
+          <el-option v-for=" item  in  folderSelectOptions " :key="item.id" :label="item.name" :value="item.id">
+          </el-option>
+        </el-select>
+      </el-form-item>
+      <template #footer>
+        <div class="dialog-footer">
+          <el-button @click="openFolderView = false">取消</el-button>
+          <el-button type="primary" @click="handelFolderViewConfirm()">
+            确定
+          </el-button>
+        </div>
+      </template>
     </el-dialog>
 
     <el-dialog :lock-scroll="false" v-model="openView" title="文件传阅" :width="650">
-      <!-- <el-row :gutter="10">
-        <el-col :span="8">
-          <el-input v-model="filterText" style="width: 160px" placeholder="Filter keyword" @input="onQueryChanged" />
-
-          <el-tree ref="treeRef" style="padding: 5px 10px" class="filter-tree" :data="treeGroupData"
-            :props="defaultProps" show-checkbox default-expand-all node-key="id" highlight-current
-            @check="getCheckedNodes" :filter-node-method="filterNode">
-          </el-tree>
-          <el-tree-v2 ref="treeRef" style="max-width: 600px" :data="treeGroupData" :props="defaultProps" show-checkbox
-            node-key="id" highlight-current @check="getCheckedNodes" :filter-method="filterMethod" />
-        </el-col>
-        <el-col :span="16">
-          <el-transfer v-model="transferValue" :data="transferData" />
-        </el-col>
-      </el-row> -->
       <el-form :model="formData">
         <el-form-item label="部门选择">
           <el-select v-model="formData.group" multiple collapse-tags placeholder="Select" style="width: 280px">
-            <el-option v-for="item in treeGroupData" :key="item.id" :label="item.shortName" :value="item.id" />
+            <el-option v-for="    item     in     treeGroupData    " :key="item.id" :label="item.shortName"
+              :value="item.id" @click="addPersonGroup(item.id)" />
           </el-select>
         </el-form-item>
         <el-form-item label="接传人员">
-          <el-select v-model="formData.personData" placeholder="Select" style="width: 280px" multiple>
-            <el-option-group v-for="group in personOptions" :key="group.label" :label="group.label">
-              <el-option v-for="item in group.children" :key="item.value" :label="item.name" :value="item.value" />
+          <el-select v-model="formData.users" placeholder="Select" style="width: 280px" multiple>
+            <el-option-group v-for="    group     in     personOptions    " :key="group.label" :label="group.label">
+              <el-option v-for="    item     in     group.children    " :key="item.value" :label="item.name"
+                :value="item.value" />
             </el-option-group>
           </el-select>
         </el-form-item>
@@ -149,7 +165,7 @@
 
         </el-form-item>
         <el-form-item label="时间限制">
-          <el-checkbox-group v-model="formData.type">
+          <el-checkbox-group v-model="formData.isExpireUnableLook">
             <el-checkbox value="到期推送" name="type">
               到期推送
             </el-checkbox>
@@ -159,7 +175,7 @@
           </el-checkbox-group>
         </el-form-item>
         <el-form-item label="传阅时长">
-          <el-select v-model="form.region" placeholder="请选择">
+          <el-select v-model="formData.browseDuration" placeholder="请选择">
             <el-option label="5天" value="5" />
             <el-option label="7天" value="7" />
             <el-option label="14天" value="14" />
@@ -168,11 +184,49 @@
             <el-option label="35天" value="35" />
           </el-select>
         </el-form-item>
+        <el-form-item label="是否答题">
+          <el-select v-model="formData.hasQuestions" placeholder="请选择">
+            <el-option label="是" value="0" />
+            <el-option label="否" value="1" />
+          </el-select>
+        </el-form-item>
+        <div class="qs-grid" v-if="form.hasQuestions == 0">
+          <h3>问卷新增：<el-button @click="addQsItem()">添加题目</el-button></h3>
+          <el-form :model="qsForm" label-width="70">
+            <el-row :gutter="20" v-for="(item, i) in qsForm">
+              <el-col :span="12">
+                <el-form-item :label="'题目' + (i + 1)">
+                  <el-input v-model="item.title" placeholder="请输入题目" />
+                </el-form-item>
+                <el-form-item label=" ">
+                  <el-button @click="delQsItem(i)" type="danger">删除问题</el-button>
+                </el-form-item>
+              </el-col>
+              <el-col :span="12">
+                <el-form-item :label="'选项' + (j + 1)" v-for="(cell, j) in item.answers">
+                  <el-input v-model="cell.description" placeholder="请输入题目" class="ans-input">
+                    <template #append>
+                      <a href="javascript:" class="ans-input-btn" @click="delAnsItem(i, j)">
+                        <el-icon>
+                          <Delete />
+                        </el-icon>
+                      </a>
+                    </template>
+                  </el-input>
+                </el-form-item>
+                <el-form-item label=" ">
+                  <el-button @click="addAnsItem(i)">添加选项</el-button>
+                </el-form-item>
+              </el-col>
+              <el-divider border-style="dashed" />
+            </el-row>
+          </el-form>
+        </div>
       </el-form>
       <template #footer>
         <div class="dialog-footer">
           <el-button @click="openView = false">取消</el-button>
-          <el-button type="primary" @click="openView = false">
+          <el-button type="primary" @click="transformConform">
             确定
           </el-button>
         </div>
@@ -182,8 +236,9 @@
 </template>
 <script setup name="files">
 import { listSysfile, delSysfile, getSysfile, listFolder, getAllInfo } from '@/api/tool/file.js'
-import { getDocumentToken } from '@/api/files/document.js'
-import { useClipboard } from '@vueuse/core'
+import { listUser, getDepartments } from '@/api/system/user'
+import { getDocumentToken, copyDocument, moveDocument } from '@/api/files/document.js'
+import { defaultWindow, useClipboard } from '@vueuse/core'
 import QRCode from 'qrcodejs2-fixes'
 import { showTime } from '@/utils'
 import { getToken } from '@/utils/auth';
@@ -191,6 +246,9 @@ import { getToken } from '@/utils/auth';
 import Breadcrumb from '@/components/Breadcrumb'
 
 import { fromByteArray } from 'base64-js';
+
+// 根目录ID
+const rootId = ref('a4d06132-d76c-49b5-8472-2bf78ac4147e')
 
 // 选中id数组
 const ids = ref([])
@@ -211,8 +269,63 @@ const updateSearch = ref(false)
 const title = ref('')
 // 是否显示弹出层
 const open = ref(false)
-const openView = ref(true)
+const openView = ref(false)
 const openFileView = ref(false)
+
+const viewUrl = ref('')
+
+// 问卷表单
+const qsForm = ref([{
+  title: '',
+  answers: [
+    {
+      description: " ",
+      isCorrect: true
+    }
+  ]
+}])
+
+function addQsItem() {
+  let qsItem = {
+    title: '',
+    answers: [
+      {
+        description: " ",
+        isCorrect: true
+      }
+    ]
+  }
+  let _list = qsForm.value
+  _list.push(qsItem)
+  qsForm.value = _list
+}
+
+function addAnsItem(index) {
+  console.log(index, 'index')
+  let _list = qsForm.value[index].answers
+  _list.push({ value: '' })
+  qsForm.value[index].answers = _list
+  console.log(qsForm.value, 'qsForm[index].answers')
+}
+
+function delQsItem(i) {
+  if (i > -1 && i < qsForm.value.length) {
+    qsForm.value.splice(i, 1);
+  }
+}
+
+function delAnsItem(i, j) {
+  console.log(i, j, 'i,j')
+  if (j > -1 && j < qsForm.value[i].ansList.length) {
+    qsForm.value[i].ansList.splice(j, 1);
+  }
+}
+
+function transformConform() {
+  console.log(JSON.stringify(qsForm.value), '2')
+}
+
+
 // 表单
 const formRef = ref(null)
 const formView = ref({})
@@ -244,6 +357,32 @@ const saveDirOptions = ref([
 const dataList = ref([])
 // 总记录数
 const total = ref(0)
+
+// 文件夹选择
+const openFolderView = ref(false)
+const selectFolder = ref('')
+const selectDocument = ref('')
+const optionType = ref('')
+const folderSelectOptions = ref([])
+function handelFolderViewConfirm() {
+  if (optionType.value == 'copy') {
+    copyDocument({ destinationFolderId: selectFolder.value, documentId: selectDocument.value }).then((res) => {
+      openFolderView.value = false
+      getAllList('a4d06132-d76c-49b5-8472-2bf78ac4147e')
+      console.log(res, 'res')
+    })
+  } else if (optionType.value == 'move') {
+    moveDocument({ destinationFolderId: selectFolder.value, documentId: selectDocument.value }).then((res) => {
+      openFolderView.value = false
+      getAllList('a4d06132-d76c-49b5-8472-2bf78ac4147e')
+      console.log(res, 'res')
+    })
+  } else {
+    getAllList('a4d06132-d76c-49b5-8472-2bf78ac4147e')
+  }
+
+}
+
 
 const state = reactive({
   form: {
@@ -318,283 +457,7 @@ const filterMethod = (query, node) => {
   return node.shortName.includes(query)
 }
 
-const treeGroupData = [
-  {
-    "id": "75",
-    "parentId": "13",
-    "code": "75",
-    "fullName": "运营分公司经营层",
-    "shortName": "运营分公司经营层",
-    "order": 1
-  },
-  {
-    "id": "30",
-    "parentId": "13",
-    "code": "30",
-    "fullName": "车辆维修中心",
-    "shortName": "车辆维修中心",
-    "order": 35
-  },
-  {
-    "id": "YYB07",
-    "parentId": "13",
-    "code": "YYB07",
-    "fullName": "机自维修中心",
-    "shortName": "机自维修中心",
-    "order": 36
-  },
-  {
-    "id": "YYB08",
-    "parentId": "13",
-    "code": "YYB08",
-    "fullName": "供电维修中心",
-    "shortName": "供电维修中心",
-    "order": 37
-  },
-  {
-    "id": "YYB09",
-    "parentId": "13",
-    "code": "YYB09",
-    "fullName": "工务维修中心",
-    "shortName": "工务维修中心",
-    "order": 38
-  },
-  {
-    "id": "YYB10",
-    "parentId": "13",
-    "code": "YYB10",
-    "fullName": "通号维修中心",
-    "shortName": "通号维修中心",
-    "order": 39
-  }
-]
-const personList = [
-  {
-    "id": "204728ce-46b2-47d7-afd0-da34fbf43ca1",
-    "userName": "600117",
-    "email": null,
-    "firstName": "吴凯凯",
-    "lastName": null,
-    "phoneNumber": "13586792459",
-    "address": null,
-    "profilePhoto": "Users\\user-profile.jpg",
-    "provider": null,
-    "isActive": true,
-    "isAdmin": false,
-    "size": 0,
-    "userClaims": null
-  },
-  {
-    "id": "4bd0d295-bf7e-41e4-89b2-ac5725579562",
-    "userName": "600473",
-    "email": null,
-    "firstName": "缪能敏",
-    "lastName": null,
-    "phoneNumber": "13777070500",
-    "address": null,
-    "profilePhoto": "Users\\user-profile.jpg",
-    "provider": null,
-    "isActive": true,
-    "isAdmin": false,
-    "size": 0,
-    "userClaims": null
-  },
-  {
-    "id": "428980ad-099e-4384-b3ac-91972c3f1224",
-    "userName": "604066",
-    "email": null,
-    "firstName": "陆晓安",
-    "lastName": null,
-    "phoneNumber": "18268607700",
-    "address": null,
-    "profilePhoto": "Users\\user-profile.jpg",
-    "provider": null,
-    "isActive": true,
-    "isAdmin": false,
-    "size": 0,
-    "userClaims": null
-  },
-  {
-    "id": "12304a2c-8db1-4539-9c63-5bf01dadf923",
-    "userName": "605271",
-    "email": null,
-    "firstName": "李嘉静",
-    "lastName": null,
-    "phoneNumber": "15605841501",
-    "address": null,
-    "profilePhoto": "Users\\user-profile.jpg",
-    "provider": null,
-    "isActive": true,
-    "isAdmin": false,
-    "size": 0,
-    "userClaims": null
-  },
-  {
-    "id": "9c4d0de5-a24d-40de-949c-2650214fbb08",
-    "userName": "601652",
-    "email": null,
-    "firstName": "马军令",
-    "lastName": null,
-    "phoneNumber": "15867800361",
-    "address": null,
-    "profilePhoto": "Users\\user-profile.jpg",
-    "provider": null,
-    "isActive": true,
-    "isAdmin": false,
-    "size": 0,
-    "userClaims": null
-  },
-  {
-    "id": "fe2a6ca6-45a5-4e4a-9cb0-332968bde0fa",
-    "userName": "603413",
-    "email": null,
-    "firstName": "翁石影",
-    "lastName": null,
-    "phoneNumber": "15867211332",
-    "address": null,
-    "profilePhoto": "Users\\user-profile.jpg",
-    "provider": null,
-    "isActive": true,
-    "isAdmin": false,
-    "size": 0,
-    "userClaims": null
-  },
-  {
-    "id": "cbccb419-b5a7-4a69-85a5-366a3a68d8a2",
-    "userName": "100914",
-    "email": null,
-    "firstName": "丁智慧",
-    "lastName": null,
-    "phoneNumber": "15990537511",
-    "address": null,
-    "profilePhoto": "Users\\user-profile.jpg",
-    "provider": null,
-    "isActive": true,
-    "isAdmin": false,
-    "size": 0,
-    "userClaims": null
-  },
-  {
-    "id": "a715aff4-30ac-4879-b7a5-44c4066c99c1",
-    "userName": "100984",
-    "email": null,
-    "firstName": "徐丽",
-    "lastName": null,
-    "phoneNumber": "13586692767",
-    "address": null,
-    "profilePhoto": "Users\\user-profile.jpg",
-    "provider": null,
-    "isActive": true,
-    "isAdmin": false,
-    "size": 0,
-    "userClaims": null
-  },
-  {
-    "id": "d1d4e3e2-55a1-40c2-bcb8-209ffcde0e97",
-    "userName": "605270",
-    "email": null,
-    "firstName": "马萍",
-    "lastName": null,
-    "phoneNumber": "15372682198",
-    "address": null,
-    "profilePhoto": "Users\\user-profile.jpg",
-    "provider": null,
-    "isActive": true,
-    "isAdmin": false,
-    "size": 0,
-    "userClaims": null
-  },
-  {
-    "id": "4d79fd4e-504b-41d1-ad7a-4bd55a92bcca",
-    "userName": "604015",
-    "email": null,
-    "firstName": "胡玥",
-    "lastName": null,
-    "phoneNumber": "13777084958",
-    "address": null,
-    "profilePhoto": "Users\\user-profile.jpg",
-    "provider": null,
-    "isActive": true,
-    "isAdmin": false,
-    "size": 0,
-    "userClaims": null
-  },
-  {
-    "id": "6c236045-0d5e-4770-b297-865f548e691d",
-    "userName": "606676",
-    "email": null,
-    "firstName": "张欣",
-    "lastName": null,
-    "phoneNumber": "13567899287",
-    "address": null,
-    "profilePhoto": "Users\\user-profile.jpg",
-    "provider": null,
-    "isActive": true,
-    "isAdmin": false,
-    "size": 0,
-    "userClaims": null
-  },
-  {
-    "id": "dd1722d5-cd07-42e5-b544-a36950cc8221",
-    "userName": "606926",
-    "email": null,
-    "firstName": "邬米叠",
-    "lastName": null,
-    "phoneNumber": "15168106345",
-    "address": null,
-    "profilePhoto": "Users\\user-profile.jpg",
-    "provider": null,
-    "isActive": true,
-    "isAdmin": false,
-    "size": 0,
-    "userClaims": null
-  },
-  {
-    "id": "78ece4f1-8fd8-4805-8dd6-1022ea31ecae",
-    "userName": "601581",
-    "email": null,
-    "firstName": "沈建波",
-    "lastName": null,
-    "phoneNumber": "13805897917",
-    "address": null,
-    "profilePhoto": "Users\\user-profile.jpg",
-    "provider": null,
-    "isActive": true,
-    "isAdmin": false,
-    "size": 0,
-    "userClaims": null
-  },
-  {
-    "id": "f07fd4c1-731b-4e63-8c23-0bc6b7a9342c",
-    "userName": "608864",
-    "email": null,
-    "firstName": "朱梦莹",
-    "lastName": null,
-    "phoneNumber": "18400174606",
-    "address": null,
-    "profilePhoto": "Users\\user-profile.jpg",
-    "provider": null,
-    "isActive": true,
-    "isAdmin": false,
-    "size": 0,
-    "userClaims": null
-  },
-  {
-    "id": "9fefe329-bf27-40a9-8165-796b77293848",
-    "userName": "610242",
-    "email": null,
-    "firstName": "钱进",
-    "lastName": null,
-    "phoneNumber": "18868927512",
-    "address": null,
-    "profilePhoto": "Users\\user-profile.jpg",
-    "provider": null,
-    "isActive": true,
-    "isAdmin": false,
-    "size": 0,
-    "userClaims": null
-  }
-]
+const treeGroupData = ref([])
 
 const groupData = ref([{}])
 const personData = ref([{}])
@@ -717,6 +580,7 @@ async function getAllList(id) {
   Promise.all([p1, p2]).then(function (values) {
     console.log(values);//values为一个数组
     dataList.value = [...values[0], ...values[1]]
+    folderSelectOptions.value = values[0]
     console.log(dataList.value);
     loading.value = false
     ///进行你的下一步操作
@@ -759,7 +623,7 @@ function handleSelectionChange(selection) {
 /** 搜索按钮操作 */
 function handleQuery() {
   queryParams.pageNum = 1
-  getAllList('a4d06132-d76c-49b5-8472-2bf78ac4147e')
+  getAllList(rootId.value)
 }
 /** 新增按钮操作 */
 function handleAdd() {
@@ -767,6 +631,11 @@ function handleAdd() {
   open.value = true
   title.value = '上传文件'
   // form.value.storeType = queryParams.storeType
+}
+// 关闭上传窗口
+function handleClosed(item) {
+  open.value = false
+  handleQuery()
 }
 /** 删除按钮操作 */
 function handleDelete(row) {
@@ -785,6 +654,7 @@ function handleDelete(row) {
 }
 /** 查看按钮操作 */
 function handleView(row) {
+  viewUrl.value = ''
   if (!row.extension) {
     router.push('/forward/folder?id=' + row.id + '&physicalFolderId=' + row.physicalFolderId)
   } else {
@@ -804,11 +674,18 @@ function handleView(row) {
       console.log(byteArray, 'byteArray')
       var stringData = fromByteArray(byteArray);
       // let encodedString = window.btoa(stringData);
-      window.open('http://172.20.153.9:8012/onlinePreview?url=' + stringData)
+      // window.open('http://172.20.153.9:8012/onlinePreview?url=' + stringData)
+      viewUrl.value = 'http://172.20.153.9:8012/onlinePreview?url=' + stringData
+      openFileView.value = true
     })
   }
 
 }
+
+function handelTransform(row) {
+  openView.value = true
+}
+
 function createQrCode(url) {
   document.getElementById('imgContainer').innerHTML = ''
   new QRCode(document.getElementById('imgContainer'), {
@@ -833,7 +710,7 @@ function submitUpload() {
           fileName: form.value.fileName,
           storeType: form.value.storeType,
           fileNameType: form.value.fileNameType,
-          physicalFolderId: route.query.physicalFolderId
+          physicalFolderId: '79073ec1-51e2-4772-95e6-9b06075a174b'
         }
         resolve(true)
       })
@@ -846,17 +723,33 @@ function submitUpload() {
 }
 
 async function handleDown(item) {
-  await proxy.downFile('/common/downloadFile', { fileId: item.id })
+  await proxy.downFile(`/api/document/${item.id}/download`)
 }
-const { copy, isSupported } = useClipboard()
-const copyText = async (val) => {
-  if (isSupported) {
-    copy(val)
-    proxy.$modal.msgSuccess('复制成功！')
-  } else {
-    proxy.$modal.msgError('当前浏览器不支持')
-  }
+
+async function handelOptionDocument(val, type) {
+  selectDocument.value = val
+  optionType.value = type
+  openFolderView.value = true
 }
+
+function getTreeselect() {
+  getDepartments({ parentId: "13" }).then((response) => {
+    treeGroupData.value = [{ id: 0, shortName: '未知部门', children: [] }, ...response]
+    // console.log(deptOptions.value, 'dep')
+  })
+}
+
+function addPersonGroup(id) {
+  listUser(id).then((res) => {
+    let arr = res
+    loading.value = false
+    userList.value = arr
+    total.value = arr.length
+  })
+}
+
+getTreeselect()
+
 handleQuery()
 </script>
 <style scoped>
@@ -877,5 +770,14 @@ handleQuery()
 
 .qrCode {
   border: 5px solid var(--el-color-primary);
+}
+
+.ans-input /deep/ .el-input-group__append {
+  padding: 0 !important;
+}
+
+.ans-input-btn {
+  display: block;
+  padding: 0 10px;
 }
 </style>

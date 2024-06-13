@@ -5,7 +5,7 @@ import { downFile } from '@/utils/request'
 // 查询用户列表
 export function listUser(query) {
   return request({
-    url: '/api/User/GetUsers',
+    url: '/api/Circulation/GetUsersNoPage',
     method: 'get',
     params: query
   })
@@ -136,5 +136,14 @@ export function importTemplate() {
     url: '/system/user/importTemplate',
     method: 'get',
     responseType: 'blob' //1.首先设置responseType对象格式为 blob:
+  })
+}
+
+// 文件下发
+export function addCirculationDoc(data) {
+  return request({
+    url: '/api/Circulation/AddCirculationDoc',
+    method: 'post',
+    data: data
   })
 }

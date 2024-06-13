@@ -282,13 +282,13 @@ const selectDocument = ref('')
 const optionType = ref('')
 const folderSelectOptions = ref([])
 function handelFolderViewConfirm() {
-  if (optionType = 'copy') {
+  if (optionType.value == 'copy') {
     copyDocument({ destinationFolderId: selectFolder.value, documentId: selectDocument.value }).then((res) => {
       openFolderView.value = false
       getAllList('a4d06132-d76c-49b5-8472-2bf78ac4147e')
       console.log(res, 'res')
     })
-  } else if (optionType = 'move') {
+  } else if (optionType.value == 'move') {
     moveDocument({ destinationFolderId: selectFolder.value, documentId: selectDocument.value }).then((res) => {
       openFolderView.value = false
       getAllList('a4d06132-d76c-49b5-8472-2bf78ac4147e')

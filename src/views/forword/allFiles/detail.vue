@@ -280,20 +280,20 @@ const selectDocument = ref('')
 const optionType = ref('')
 const folderSelectOptions = ref([])
 function handelFolderViewConfirm() {
-  if (optionType = 'copy') {
+  if (optionType.value == 'copy') {
     copyDocument({ destinationFolderId: selectFolder.value, documentId: selectDocument.value }).then((res) => {
       openFolderView.value = false
-      getAllList('a4d06132-d76c-49b5-8472-2bf78ac4147e')
+      handleQuery()
       console.log(res, 'res')
     })
-  } else if (optionType = 'move') {
+  } else if (optionType.value == 'move') {
     moveDocument({ destinationFolderId: selectFolder.value, documentId: selectDocument.value }).then((res) => {
       openFolderView.value = false
-      getAllList('a4d06132-d76c-49b5-8472-2bf78ac4147e')
+      handleQuery()
       console.log(res, 'res')
     })
   } else {
-    getAllList('a4d06132-d76c-49b5-8472-2bf78ac4147e')
+    handleQuery()
   }
 
 }
@@ -435,6 +435,7 @@ async function getAllList(id) {
   Promise.all([p1, p2]).then(function (values) {
     console.log(values);//values为一个数组
     dataList.value = [...values[0], ...values[1]]
+    folderSelectOptions.value = values[0]
     console.log(dataList.value);
     loading.value = false
     ///进行你的下一步操作

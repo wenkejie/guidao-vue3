@@ -146,43 +146,49 @@
     <el-dialog :lock-scroll="false" v-model="openView" title="文件传阅" :width="650">
       <el-form :model="formData">
         <el-form-item label="部门选择">
-          <el-select v-model="formData.group" multiple collapse-tags placeholder="Select" style="width: 280px">
+          <el-select v-model="groupData" multiple collapse-tags placeholder="Select" @change="getUsersList()"
+            style="width: 320px">
             <el-option v-for="    item     in     treeGroupData    " :key="item.id" :label="item.shortName"
-              :value="item.id" @click="addPersonGroup(item.id)" />
+              :value="item.id" />
           </el-select>
         </el-form-item>
         <el-form-item label="接传人员">
-          <el-select v-model="formData.users" placeholder="Select" style="width: 280px" multiple>
-            <el-option-group v-for="    group     in     personOptions    " :key="group.label" :label="group.label">
-              <el-option v-for="    item     in     group.children    " :key="item.value" :label="item.name"
-                :value="item.value" />
-            </el-option-group>
+          <el-select v-model="selectUsers" placeholder="Select" style="width: 320px" multiple collapse-tags>
+            <el-option v-for="item in personOptions" :key="item.userName" :label="item.firstName" :value="item.id">
+              <span style="float: left">{{ item.firstName }}</span>
+              <span style="
+                  float: right;
+                  color: var(--el-text-color-secondary);
+                  font-size: 13px;
+                ">
+                {{ item.departmentName }}
+              </span>
+            </el-option>
           </el-select>
         </el-form-item>
         <el-form-item label="传阅期限">
-          <el-date-picker v-model="formData.dateRangTime" type="daterange" range-separator="-" start-placeholder="开始日期"
-            end-placeholder="结束日期" placeholder="请选择上传时间"></el-date-picker>
+          <el-date-picker v-model="selctDates" type="daterange" :default-time="defaultTime" range-separator="-"
+            start-placeholder="开始日期" end-placeholder="结束日期" placeholder="请选择上传时间"></el-date-picker>
 
         </el-form-item>
-        <el-form-item label="时间限制">
-          <el-checkbox-group v-model="formData.isExpireUnableLook">
-            <el-checkbox value="到期推送" name="type">
-              到期推送
-            </el-checkbox>
-            <el-checkbox value="到期后不可查阅" name="type">
-              到期后不可查阅
-            </el-checkbox>
-          </el-checkbox-group>
-        </el-form-item>
+        <el-row :gutter="10" style="width: 300px;">
+          <el-col :span="12">
+            <el-form-item label="到期推送">
+              <el-switch v-model="formData.isExpirePush" />
+            </el-form-item>
+          </el-col>
+          <el-col :span="12">
+            <el-form-item label="到期后不可查阅">
+              <el-switch v-model="formData.isExpireUnableLook" />
+            </el-form-item>
+          </el-col>
+        </el-row>
         <el-form-item label="传阅时长">
-          <el-select v-model="formData.browseDuration" placeholder="请选择">
-            <el-option label="5天" value="5" />
-            <el-option label="7天" value="7" />
-            <el-option label="14天" value="14" />
-            <el-option label="21天" value="21" />
-            <el-option label="28天" value="28" />
-            <el-option label="35天" value="35" />
-          </el-select>
+          <el-input v-model="formData.browseDuration" placeholder="请选择" style="width: 320px;">
+            <template #append>
+              秒
+            </template>
+          </el-input>
         </el-form-item>
         <el-form-item label="是否答题">
           <el-select v-model="formData.hasQuestions" placeholder="请选择">
@@ -190,7 +196,7 @@
             <el-option label="否" value="1" />
           </el-select>
         </el-form-item>
-        <div class="qs-grid" v-if="form.hasQuestions == 0">
+        <div class="qs-grid" v-if="formData.hasQuestions == 0">
           <h3>问卷新增：<el-button @click="addQsItem()">添加题目</el-button></h3>
           <el-form :model="qsForm" label-width="70">
             <el-row :gutter="20" v-for="(item, i) in qsForm">
@@ -236,12 +242,14 @@
 </template>
 <script setup name="files">
 import { listSysfile, delSysfile, getSysfile, listFolder, getAllInfo } from '@/api/tool/file.js'
-import { listUser, getDepartments } from '@/api/system/user'
+import { listUser, getDepartments, addCirculationDoc } from '@/api/system/user'
 import { getDocumentToken, copyDocument, moveDocument } from '@/api/files/document.js'
 import { defaultWindow, useClipboard } from '@vueuse/core'
 import QRCode from 'qrcodejs2-fixes'
 import { showTime } from '@/utils'
 import { getToken } from '@/utils/auth';
+
+import { ElMessage, ElMessageBox } from 'element-plus'
 
 import Breadcrumb from '@/components/Breadcrumb'
 
@@ -264,6 +272,12 @@ const showSearch = ref(true)
 //高级搜索
 const updateSearch = ref(false)
 
+//选择的时间区间
+const selctDates = ref([])
+const defaultTime = ref([
+  new Date(2000, 1, 1, 0, 0, 0),
+  new Date(2000, 2, 1, 23, 59, 59),
+])
 
 // 弹出层标题
 const title = ref('')
@@ -321,8 +335,49 @@ function delAnsItem(i, j) {
   }
 }
 
+function resetFormInfo() {
+  qsForm.value = []
+  selctDates.value = []
+  formData.value = {}
+}
+
 function transformConform() {
-  console.log(JSON.stringify(qsForm.value), '2')
+  formData.value.questions = qsForm.value
+  formData.value.startDate = selctDates.value[0].toISOString()
+  formData.value.endDate = selctDates.value[1].toISOString()
+  formData.value.users = selectUsers.value
+  // console.log(JSON.stringify(formData.value), 'formData.value.toString()')
+  ElMessageBox.confirm(
+    '确认将此文件下发?',
+    'Warning',
+    {
+      confirmButtonText: 'OK',
+      cancelButtonText: 'Cancel',
+      type: 'warning',
+    }
+  )
+    .then(() => {
+      addCirculationDoc(formData.value).then((res) => {
+        if (res.statusCode == 200) {
+          ElMessage({
+            type: 'success',
+            message: res.msg,
+          })
+          resetFormInfo()
+        } else {
+          ElMessage({
+            type: 'error',
+            message: res.msg,
+          })
+        }
+      })
+    })
+    .catch(() => {
+      ElMessage({
+        type: 'info',
+        message: '取消',
+      })
+    })
 }
 
 
@@ -459,8 +514,8 @@ const filterMethod = (query, node) => {
 
 const treeGroupData = ref([])
 
-const groupData = ref([{}])
-const personData = ref([{}])
+const groupData = ref([])
+const personData = ref([])
 
 
 const formData = ref({})
@@ -484,7 +539,10 @@ const generateData = () => {
 const transferData = ref(generateData())
 const transferValue = ref([])
 
-const personOptions = ref([
+
+const personOptions = ref([])
+const selectUsers = ref([])
+const personOptions1 = ref([
   {
     "label": "财务部",
     "children": [
@@ -538,6 +596,7 @@ const personOptions = ref([
     ]
   }
 ])
+
 
 // 查询数据
 function getFileList() {
@@ -683,6 +742,7 @@ function handleView(row) {
 }
 
 function handelTransform(row) {
+  formData.value.documentId = row.id
   openView.value = true
 }
 
@@ -739,12 +799,12 @@ function getTreeselect() {
   })
 }
 
-function addPersonGroup(id) {
-  listUser(id).then((res) => {
-    let arr = res
-    loading.value = false
-    userList.value = arr
-    total.value = arr.length
+function getUsersList() {
+  let query = groupData.value.join(',')
+  // console.log(query, 'query')
+  listUser({ departmentIds: query }).then((res) => {
+    personOptions.value = res.data
+    // console.log(personOptions.value, 'personOptions.value')
   })
 }
 
